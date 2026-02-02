@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英単語トレーニング 1051-1200</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        #quiz-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        h1 { font-size: 1.2rem; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        #question { margin: 20px 0; font-size: 1.1rem; line-height: 1.5; }
+        .option-btn { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; background: white; cursor: pointer; text-align: left; font-size: 1rem; transition: background 0.2s; }
+        .option-btn:hover { background: #e9ecef; }
+        #result { margin-top: 20px; font-weight: bold; padding: 15px; border-radius: 5px; display: none; }
+        .correct { background: #d4edda; color: #155724; }
+        .incorrect { background: #f8d7da; color: #721c24; }
+        #next-btn { margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; display: none; width: 100%; font-size: 1rem; }
+        #stats { margin-top: 20px; font-size: 0.9rem; color: #666; text-align: right; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <h1>英単語トレーニング (1051-1200)</h1>
+    <div id="stats">残り: <span id="remaining">0</span> / 全体: <span id="total">0</span></div>
+    <div id="question">読み込み中...</div>
+    <div id="options"></div>
+    <div id="result"></div>
+    <button id="next-btn" onclick="loadNextQuestion()">次の問題へ</button>
+</div>
+
+<script>
+    // 164問の全データ
+    const quizData = [
+        { q: "abstract 「抽象的」の対義語を選択せよ。", a: "c", opts: ["stable", "harmonious", "concrete"] },
+        { q: "言い伝えによると", a: "c", opts: ["face an obstacle", "overcome a difficulty", "according to legend"] },
+        { q: "He can't ____ to buy a new car. （余裕がない）", a: "a", opts: ["afford", "money", "rest"] },
+        { q: "農業", a: "b", opts: ["uglyculture", "agriculture", "ecritculture"] },
+        { q: "Mr. Fujita's income is over $1 million. （年間の）", a: "a", opts: ["annual", "stock", "debt"] },
+        { q: "The country made an ____ to the IMF for financial aid. （要請、訴え）", a: "b", opts: ["request", "appeal", "agriculture"] },
+        { q: "(援助・情報などの) 要望、嘆願", a: "b", opts: ["code", "appeal", "ritual", "ruin"] },
+        { q: "Thank you. I really ____ it. （本当に感謝しています）", a: "c", opts: ["appeal", "delight", "appreciate"] },
+        { q: "ありがたく思う；高く評価する", a: "a", opts: ["appreciate", "realize", "grateful"] },
+        { q: "陸軍", a: "b", opts: ["air force", "army", "navy"] },
+        { q: "実を言うと", a: "b", opts: ["no matter what", "as a matter of fact", "to make matters worse"] },
+        { q: "____ as I am concerned, the movie was terrible. （に関する限り）", a: "a", opts: ["As far", "As a matter", "As long"] },
+        { q: "(疑いを持つ人に) 保証する / I can ____ you. （私が保証します）", a: "a", opts: ["assure", "guarantee"] },
+        { q: "心に留めておく", a: "b", opts: ["Never mind.", "bear ... in mind", "make up one's mind"] },
+        { q: "そのうえ", a: "a", opts: ["besides", "whereas", "nevertheless"] },
+        { q: "縛る、束ねる", a: "c", opts: ["stick", "point", "bind"] },
+        { q: "...crosses the ____ between Spain and France. （国境、境界）", a: "a", opts: ["border", "harmony", "specific"] },
+        { q: "The robber ____ Jack's arms with a rope. （縛った：bindの過去形）", a: "b", opts: ["inspired", "bound", "stuck"] },
+        { q: "set a ____ （境界線を引く）", a: "a", opts: ["boundary", "plain", "fate"] },
+        { q: "暗号を解読する", a: "c", opts: ["have a clue", "destroy a sign", "break a code"] },
+        { q: "（戦争や火災などが）急に始まる、発生する", a: "c", opts: ["こわれる、故障する", "疲れさせる", "急に始まる、発生する"] },
+        { q: "輝いている；(色などが) あざやかな / Amy likes ____ colors.", a: "b", opts: ["brilliant", "bright"] },
+        { q: "輝いている；(アイデアなどが) とてもよい / That's a ____ idea.", a: "a", opts: ["brilliant", "bright"] },
+        { q: "He has a ____ range of hobbies. （幅広い趣味）", a: "b", opts: ["narrow", "broad"] },
+        { q: "同意語を選択せよ：= wide", a: "c", opts: ["narrow", "vast", "broad"] },
+        { q: "My car ____ in the middle of the desert. （故障した）", a: "b", opts: ["broke in", "broke down", "broke out"] },
+        { q: "We must cut the ____. （予算削減せねば）", a: "a", opts: ["budget", "stock", "debt"] },
+        { q: "(特別な日・めでたいことを) 祝う", a: "a", opts: ["celebrate", "ceremony", "ritual"] },
+        { q: "Her diary is the ____ to everything. （すべての手がかりである）", a: "a", opts: ["clue", "mystery", "besides"] },
+        { q: "(抽象的な事柄に関する) 概念", a: "a", opts: ["concept", "prejudice", "superstition"] },
+        { q: "She is always ____ about her children. （心配している）", a: "a", opts: ["concerned", "involved", "depressed"] },
+        { q: "Ms. Ogita is ____ with the study of the ancient language. （関係している）", a: "b", opts: ["amused", "concerned", "drowned"] },
+        { q: "abstract 「抽象的」の対義語を選択せよ。", a: "a", opts: ["concrete", "stable", "harmonious"] },
+        { q: "【形】保守的な", a: "b", opts: ["conservation", "conservative", "conserve"] },
+        { q: "You'll have to ____ stresses at work. （処理する、乗り切る）", a: "c", opts: ["afford", "exclude", "cope with"] },
+        { q: "(穀物・野菜・果物など) 農作物 / Peanuts are an important ____ in Chiba.", a: "b", opts: ["agriculture", "crop", "harvest"] },
+        { q: "【動】土地などを「耕す」「耕作する」", a: "a", opts: ["cultivate", "crop", "agriculture"] },
+        { q: "...you must ____ on food. （（食事量などを）減らす、切り詰める）", a: "b", opts: ["run short", "cut down", "cut in"] },
+        { q: "口を挟む", a: "a", opts: ["cut in", "cut down", "cut up"] },
+        { q: "We are three million yen in ____ to the bank. （借金）", a: "c", opts: ["stock", "budget", "debt"] },
+        { q: "The concert was ____ed for half an hour. （遅れた、延期された）", a: "a", opts: ["delay", "behind", "previous"] },
+        { q: "to my ____ （私にとってうれしいことに）", a: "c", opts: ["happy", "grateful", "delight"] },
+        { q: "【動】(希望や情熱を失わせて) 落胆させる", a: "a", opts: ["depress", "depression", "depressed"] },
+        { q: "(激しく) 破壊する", a: "a", opts: ["destroy", "cultivate", "remove"] },
+        { q: "【動】(期待を裏切るなどして)がっかりさせる ※綴りに注意", a: "b", opts: ["dissapointed", "dissapoint", "dissapointment"] },
+        { q: "・・を思いとどまらせる (ex. smoking 喫煙をやめさせる)", a: "a", opts: ["discourage", "quit"] },
+        { q: "(不要なものなどを)除去する", a: "a", opts: ["eliminate", "provide", "tolerate"] },
+        { q: "我慢強く、耐える", a: "a", opts: ["endure", "frighten", "exclude"] },
+        { q: "【形】倫理的な", a: "a", opts: ["ethical", "immoral", "justice"] },
+        { q: "He did very well ____ for one small mistake. （を除けば）", a: "a", opts: ["except", "calling", "less"] },
+        { q: "anytime ____ Friday （金曜以外はいつでも）", a: "b", opts: ["nothing", "except", "regardless"] },
+        { q: "He was ____ from the discussion, so he got very angry. （除外された）", a: "a", opts: ["excluded", "included"] },
+        { q: "The time bomb didn't ____. （爆発する）", a: "a", opts: ["explode", "explain", "exclude"] },
+        { q: "____ cost （追加費用）", a: "b", opts: ["rest", "extra", "afford"] },
+        { q: "fantasy の発音", a: "a", opts: ["ファンタ「シィ」", "ファンタ「ジィ」"] },
+        { q: "【形】致命的な (a ____ accident)", a: "b", opts: ["trivial", "fatal", "urgent"] },
+        { q: "悪い意味での、運命", a: "c", opts: ["fortune", "legend", "fate", "destiny"] },
+        { q: "The building ____ down in the earthquake. （倒壊した）", a: "a", opts: ["fell", "short", "bore"] },
+        { q: "Benjamin is often called Ben ____. （略して）", a: "b", opts: ["for long", "for short"] },
+        { q: "確かに、確実に", a: "b", opts: ["as a matter of fact", "for sure", "to the point"] },
+        { q: "You are ____ to have such friends. （君は幸せだ、運が良い）", a: "b", opts: ["fate", "fortunate", "prejudice"] },
+        { q: "幸運；財産", a: "b", opts: ["luck", "fortune", "fate", "destiny"] },
+        { q: "a ____ customer （常連客）", a: "d", opts: ["severe", "previous", "upset", "frequent"] },
+        { q: "怖がらせる", a: "b", opts: ["endure", "frighten", "explode"] },
+        { q: "葬式", a: "b", opts: ["budget", "funeral", "removal", "rest"] },
+        { q: "【副詞】時間をかけて、徐々に", a: "b", opts: ["steady", "gradually", "rush"] },
+        { q: "(他者の親切心などに) 感謝して", a: "a", opts: ["grateful", "delightful", "peaceful"] },
+        { q: "(成功・安全などを) 保証する", a: "c", opts: ["guarante", "guarant", "guarantee"] },
+        { q: "____ the issue （問題をうまく処理する）", a: "c", opts: ["destroy", "face", "handle"] },
+        { q: "調和", a: "d", opts: ["guarantee", "Donald Trump", "religion", "harmony"] },
+        { q: "(作物の) 収穫 / My family is very busy during the ____.", a: "a", opts: ["harvest", "crop", "cultivate"] },
+        { q: "How about ____ my house for a moment? （に立ち寄るのはどう？）", a: "c", opts: ["stopped by", "stop by", "stopping by"] },
+        { q: "・・をどう思いますか?", a: "a", opts: ["How do you like ...?", "How would you like ...?"] },
+        { q: "・・はいかがですか?", a: "b", opts: ["How do you like ...?", "How would you like ...?"] },
+        { q: "He was under the ____ that money would bring happiness. （幻想、思い込み）", a: "b", opts: ["grateful", "illusion", "fate"] },
+        { q: "He's ____ public relations. （広報担当だ）", a: "c", opts: ["to the point", "short for", "in charge of"] },
+        { q: "I fell ____ with Super-Kakko-e-man right after I met him. （恋に落ちた）", a: "a", opts: ["in love", "down love", "out of love"] },
+        { q: "要するに", a: "a", opts: ["in short", "in general", "all in all"] },
+        { q: "「取り除く」という意味ではないものを選べ", a: "d", opts: ["remove", "eliminate", "exclude", "include"] },
+        { q: "He was ____ in the discussion, so he got a right to speak. （含まれた）", a: "b", opts: ["excluded", "included"] },
+        { q: "Buzz Lightyear shouted, \"To ____ and beyond.\" （無限の彼方に）", a: "a", opts: ["infinity", "fortune", "grateful"] },
+        { q: "Her speech ____ us. （勇気づけた、刺激を与えた）", a: "c", opts: ["relied", "depended", "inspired"] },
+        { q: "(必然的に)・・・を含む、伴う", a: "b", opts: ["rely", "involve", "inspire"] },
+        { q: "He is ____ in the crime. （犯罪に関わっている）", a: "a", opts: ["involved", "relied", "except"] },
+        { q: "annoy（いらだたせる）の同意語を選択せよ。", a: "c", opts: ["inform", "inspire", "irritate"] },
+        { q: "正義、公正", a: "b", opts: ["ethics", "justice", "injustice"] },
+        { q: "I'm sorry I told you a ____. （嘘）", a: "a", opts: ["lie", "fact"] },
+        { q: "I make a ____ of keeping early hours. （心がけている）", a: "d", opts: ["problem", "mind", "matter", "point"] },
+        { q: "さらに悪いことに", a: "a", opts: ["to make matters worse", "be concerned with", "to the point"] },
+        { q: "確かめる", a: "a", opts: ["make sure", "create sure", "believe sure"] },
+        { q: "決心する", a: "a", opts: ["make up one's mind", "bear in mind", "I wonder if"] },
+        { q: "【形】 軍隊の ※綴りに注意", a: "c", opts: ["soldier", "weapon", "military", "army"] },
+        { q: "____ devices / ____ library services （移動式の、携帯可能な）", a: "a", opts: ["mobile", "involve", "carry"] },
+        { q: "【形】道徳の", a: "b", opts: ["religion", "moral", "justice"] },
+        { q: "____ understanding / ____ respect （相互の理解／尊敬）", a: "a", opts: ["mutual", "mobile", "naked"] },
+        { q: "形容詞はどれか?", a: "a", opts: ["mysterious", "mystery", "mysteriously"] },
+        { q: "神話", a: "b", opts: ["justice", "myth", "ethics"] },
+        { q: "\"I've broken the dish... I'm terribly sorry...\" の返答。", a: "b", opts: ["Don't mind.", "Never mind.", "Do mind."] },
+        { q: "それにもかかわらず", a: "a", opts: ["nevertheless", "whereas", "provided"] },
+        { q: "たとえ何が・・・であろうとも", a: "a", opts: ["no matter what ...", "as far as ...", "as a matter of fact"] },
+        { q: "a vague ____ （あいまいな考え、漠然とした見解）", a: "c", opts: ["conservative", "fantasy", "notion"] },
+        { q: "障害物", a: "a", opts: ["obstacle", "previous", "myth"] },
+        { q: "そうでないと、さもないと", a: "b", opts: ["whereas", "otherwise", "nevertheless"] },
+        { q: "困難などに打ち勝つ、克服する", a: "a", opts: ["overcome", "endure", "pray"] },
+        { q: "視点", a: "b", opts: ["superstition", "perspective", "prejudice"] },
+        { q: "同意語を選択せよ：plain", a: "a", opts: ["clear, obvious", "slow, gradual", "stable, steady"] },
+        { q: "He ____ out some errors to me. （指摘した）", a: "c", opts: ["concerned", "stopped", "pointed"] },
+        { q: "She ____ed to God for her husband's safe return. （神に祈った）", a: "c", opts: ["frighten", "delay", "pray"] },
+        { q: "(主として性的・人種的・宗教的な) 偏見", a: "c", opts: ["conservative", "fantasy", "prejudice"] },
+        { q: "Do you have any ____ experience? （以前の経験）", a: "c", opts: ["delay", "before", "previous"] },
+        { q: "Thank you for your ____ reply. （早速のお返事）", a: "b", opts: ["gradually", "prompt", "steady"] },
+        { q: "もし・・・ならば (ifよりも形式ばった言い方)", a: "b", opts: ["otherwise", "provided", "nevertheless"] },
+        { q: "____ smoking （喫煙をやめる）", a: "b", opts: ["celebrate", "quit", "appeal"] },
+        { q: "John made a ____ recovery. （急速な回復）", a: "b", opts: ["moral", "rapid", "rush"] },
+        { q: "宗教、信仰", a: "c", opts: ["myth", "prayer", "religion"] },
+        { q: "She ____ on her parents to help take care of her children. （頼っている）", a: "a", opts: ["relies", "depresses", "except"] },
+        { q: "Don't ____ me. （私に頼らないで）", a: "a", opts: ["rely on", "rely for", "except for"] },
+        { q: "Ms. Hudson made a few ____s about my painting. （少し意見を述べた）", a: "a", opts: ["remark", "legend", "lie"] },
+        { q: "This cleaner will ____ the stain from the shirt. （取り除く）", a: "c", opts: ["add", "include", "remove"] },
+        { q: "History ____s itself. （歴史は繰り返す）", a: "a", opts: ["repeat", "endure", "cope"] },
+        { q: "要請", a: "a", opts: ["request", "positive", "fairy"] },
+        { q: "(組織を) 辞職する、退職する", a: "a", opts: ["resign", "retire"] },
+        { q: "the ____ of the world （世界の残りの地域）", a: "b", opts: ["explosion", "rest", "extra"] },
+        { q: "(年齢が理由で) 引退する、定年退職する", a: "a", opts: ["retire", "resign"] },
+        { q: "(主に宗教的な) 儀式", a: "a", opts: ["ritual", "event", "funeral"] },
+        { q: "遺跡、廃墟", a: "b", opts: ["rest", "ruin", "ring"] },
+        { q: "Fuel is ____ short. （燃料が切れつつある）", a: "a", opts: ["running", "paying", "cutting"] },
+        { q: "during ____ hour / They made a ____ for the door. （急行、ラッシュ）", a: "a", opts: ["rush", "harmony", "justice"] },
+        { q: "____ injuries （重傷）", a: "b", opts: ["upset", "severe", "annual"] },
+        { q: "NGO is ____ for \"nongovernmental organization.\" （の略だ）", a: "c", opts: ["down", "big", "short"] },
+        { q: "兵士", a: "a", opts: ["soldier", "army", "officer"] },
+        { q: "To be more ____ I'm looking for something cheaper. （具体的に言うと）", a: "c", opts: ["special", "spicy", "specific"] },
+        { q: "a ____ environment （安定した環境）", a: "a", opts: ["stable", "harmony", "mutual"] },
+        { q: "a ____ hand （しっかりとした手つき）/着実な進歩", a: "c", opts: ["harmony", "gradual", "steady"] },
+        { q: "注射針を突き刺す", a: "a", opts: ["stick a needle", "stare at the doctor", "steal a cup noodle"] },
+        { q: "Stick ____ your first decision. （貫徹せよ）", a: "a", opts: ["to", "into", "out"] },
+        { q: "初志を貫徹せよ。", a: "b", opts: ["Stick your fork into his potato.", "Stick to your first decision."] },
+        { q: "株、株式；在庫", a: "c", opts: ["budget", "debt", "stock"] },
+        { q: "彼は、フォークに、ジャガイモを突き刺した。", a: "b", opts: ["He stuck a potato into a fork.", "He stuck a fork into a potato."] },
+        { q: "迷信", a: "a", opts: ["superstition", "fortune", "fate"] },
+        { q: "【名】同情、思いやり", a: "b", opts: ["inspiration", "sympathy", "depression"] },
+        { q: "話", a: "a", opts: ["tale", "tail", "tell"] },
+        { q: "(紙などを) 破る", a: "b", opts: ["explode", "tear", "eliminate"] },
+        { q: "Her comment was to ____ （的を射ていた）", a: "a", opts: ["the point", "a point", "point"] },
+        { q: "私にとってうれしいことに", a: "b", opts: ["grateful", "delight", "happy"] },
+        { q: "さらに悪いことに", a: "a", opts: ["to make matters worse", "as a matter of fact", "no matter what"] },
+        { q: "的を射た", a: "b", opts: ["point", "to the point", "a point"] },
+        { q: "Don't be ____. This is not a big deal. （動揺した、怒った）", a: "a", opts: ["upset", "willing", "frequent"] },
+        { q: "urgent（緊急の）", a: "b", opts: ["幻想的な", "緊急の", "つまらない"] },
+        { q: "(面積が) 広大な、(量が) 莫大な", a: "b", opts: ["broad", "vast", "wide"] },
+        { q: "nuclear ____s （核兵器）", a: "a", opts: ["weapon", "tale", "soldier"] },
+        { q: "Call me ____ you feel lonely. （・・・する時はいつでも）", a: "a", opts: ["whenever", "annually", "whereas", "frequently"] },
+        { q: "一方は・・・であるが", a: "b", opts: ["provided", "whereas", "otherwise"] },
+        { q: "一方は・・・であるが (別の選択肢)", a: "a", opts: ["whereas", "nevertheless", "besides"] },
+        { q: "(作業などを) いとわない、自発的な", a: "b", opts: ["unwilling", "willing"] },
+        { q: "(軍隊など) 撤退させる、撤退する；お金を引き出す", a: "a", opts: ["withdraw", "prompt", "assure"] },
+        { q: "I ____ if you could help me. （かなと思う、丁寧な依頼）", a: "c", opts: ["tell", "ask", "wonder"] },
+        { q: "He ____ out some errors. （指摘した）", a: "a", opts: ["pointed", "concerned", "stopped"] },
+        { q: "fantasy の発音", a: "a", opts: ["ファンタ「シィ」", "ファンタ「ジィ」"] },
+        { q: "陸軍", a: "b", opts: ["air force", "army", "navy"] },
+        { q: "He was ____ in the discussion, so he got a right to speak.", a: "b", opts: ["excluded", "included"] },
+        { q: "視点", a: "b", opts: ["superstition", "perspective", "prejudice"] },
+        { q: "I fell ____ with Super-Kakko-e-man...", a: "a", opts: ["in love", "down love", "out of love"] },
+        { q: "暗号を解読する", a: "c", opts: ["have a clue", "destroy a sign", "break a code"] }
+    ];
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+
+    // クイズの初期化
+    function initQuiz() {
+        // 問題をシャッフル
+        currentQuestions = [...quizData].sort(() => Math.random() - 0.5);
+        currentIndex = 0;
+        document.getElementById('total').textContent = currentQuestions.length;
+        loadQuestion();
+    }
+
+    // 問題を表示
+    function loadQuestion() {
+        if (currentIndex >= currentQuestions.length) {
+            document.getElementById('quiz-container').innerHTML = "<h1>終了！お疲れ様でした。</h1><button onclick='location.reload()'>もう一度挑戦する</button>";
+            return;
+        }
+
+        const data = currentQuestions[currentIndex];
+        document.getElementById('remaining').textContent = currentQuestions.length - currentIndex;
+        document.getElementById('question').textContent = `問${currentIndex + 1}: ${data.q}`;
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'none';
+        
+        const optionsDiv = document.getElementById('options');
+        optionsDiv.innerHTML = '';
+        
+        data.opts.forEach((opt, index) => {
+            const char = String.fromCharCode(97 + index); // a, b, c...
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = `${char}. ${opt}`;
+            btn.onclick = () => checkAnswer(char, data.a);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    // 正誤判定
+    function checkAnswer(selected, correct) {
+        const resultDiv = document.getElementById('result');
+        const btns = document.querySelectorAll('.option-btn');
+        
+        // ボタンを無効化
+        btns.forEach(btn => btn.disabled = true);
+
+        resultDiv.style.display = 'block';
+        if (selected === correct) {
+            resultDiv.textContent = "○ 正解！";
+            resultDiv.className = 'correct';
+        } else {
+            resultDiv.textContent = `× 不正解... 正解は ${correct} です。`;
+            resultDiv.className = 'incorrect';
+        }
+        
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    // 次の問題へ
+    function loadNextQuestion() {
+        currentIndex++;
+        loadQuestion();
+    }
+
+    initQuiz();
+</script>
+
+</body>
+</html>
